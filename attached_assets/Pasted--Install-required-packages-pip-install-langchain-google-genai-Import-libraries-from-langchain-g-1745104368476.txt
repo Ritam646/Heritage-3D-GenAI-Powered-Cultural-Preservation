@@ -1,0 +1,71 @@
+# Install required packages
+!pip install langchain-google-genai
+
+# Import libraries
+from langchain_google_genai import ChatGoogleGenerativeAI
+import os
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Set up Gemini API key (replace with your actual key)
+os.environ["GOOGLE_API_KEY"] = "your_gemini_api_key_here"  # Replace with your API key from Google AI Studio
+
+# Initialize the language model with Gemini 1.5 Pro
+try:
+    llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0.7)
+    logger.info("Gemini 1.5 Pro model initialized successfully.")
+except Exception as e:
+    logger.error(f"Failed to initialize Gemini model: {e}")
+    raise
+
+# List of suggested heritage sites (including your previous monuments)
+heritage_sites = [
+    "victoria memorial", "tanjavur temple", "tajmahal", "Sun Temple Konark",
+    "qutub_minar", "mysore_palace", "lotus_temple", "khajuraho", "jamali_kamali_tomb",
+    "iron_pillar", "india gate pics", "Humayun_s Tomb", "hawa mahal pics",
+    "golden temple", "Gateway of India", "Fatehpur Sikri", "Ellora Caves",
+    "Chhota Imambara", "charminar", "Charar-E-Sharif", "basilica of bom jesus",
+    "alai_minar", "alai_darwaza", "Ajanta Caves", "great wall of china",
+    "pyramids of giza", "colosseum", "machu picchu", "stonehenge"
+]
+
+def get_historical_details(site):
+    try:
+        # Craft a prompt for historical details
+        prompt = f"Provide a detailed historical overview of the {site.replace('_', ' ').title()}, including its origin, architectural significance, historical events, and cultural importance. Keep the response informative and concise, around 200-300 words. If the site is not recognized, suggest similar heritage sites and provide brief details for one of them."
+        response = llm.invoke(prompt)
+        logger.info(f"Successfully retrieved details for {site}")
+        return response.content
+    except Exception as e:
+        logger.error(f"Error retrieving details for {site}: {e}")
+        return f"Error: Could not retrieve details due to {str(e)}. Please check your API key or try again later."
+
+def main():
+    print("Welcome to the Heritage History Guide!")
+    print("I’m Grok, created by xAI, here to guide you through the wonders of history with Gemini 1.5 Pro.")
+    print("Suggested sites:", ", ".join(heritage_sites))
+    print("Enter any heritage site name, or 'quit' to exit.")
+    
+    while True:
+        site = input("\nEnter a heritage site name (or 'quit' to exit): ").lower().strip()
+        if not site:  # Check for empty input
+            print("Please enter a valid heritage site name or 'quit' to exit.")
+            continue
+        if site == 'quit':
+            print("Thank you for using the Heritage History Guide! Goodbye!")
+            break
+        
+        result = get_historical_details(site)
+        print("\nHistorical Details:")
+        print("-" * 50)
+        # Refine unrecognized site response
+        if "not recognized" in result.lower():
+            result = f"Hey! I couldn’t find '{site.replace('_', ' ').title()}'—maybe a typo or a new site? I’m guessing you might be interested in places like Hampi or Konark, given your heritage vibe! Here’s a quick take on Machu Picchu instead: Built in the 15th century by the Incas, this Andean gem features mortar-free stonework that defies earthquakes, likely a royal retreat or sacred site. Rediscovered in 1911, it’s now a UNESCO treasure drawing global visitors for its history and stunning views. Try another site, and I’ll dig deeper for you!"
+        print(result)
+        print("-" * 50)
+
+if __name__ == "__main__":
+    main()
